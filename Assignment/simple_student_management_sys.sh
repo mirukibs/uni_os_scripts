@@ -21,18 +21,18 @@ validate_registration_number() {
 
 	# Check length is 15-16 characters
 	if [[ $reg_no_length -lt $min_length ]]; then
-		echo "Error: Registration number cannot be less than $min_length"
+		echo "Error: Registration number cannot be less than $min_length!"
 		return 1
 	fi
 	
 	if [[ $((reg_no_length)) -gt $max_length ]]; then
-		echo "Error: Registration number cannot be greater than $max_length"
+		echo "Error: Registration number cannot be greater than $max_length!"
 		return 1
 	fi	
 
 	# Check format IMC/XXXX/NNNNNNN where XXXX is faculty code and NNNNNNN is numeric. Note faculty code be 3 chars instead of 4
 	if ! [[ "$reg_no_value" =~ $reg_no_format ]]; then
-		echo "Error: Incorrect format. Registration number format is IMC/XXXX/NNNNNNN"
+		echo "Error: Incorrect format. Registration number format is IMC/XXXX/NNNNNNN!"
 		return 1
 	fi
 	
@@ -45,13 +45,25 @@ validate_registration_number() {
 
 validate_grade() {
 
+	local grade_value=$1
+	local grade_value_format="^[A-Fa-f]{1}$"
+	local grade_value_length=${#grade_value}
+
 	# Check value is not empty
+	if [[ $grade_value_length -lt 1 ]]; then
+		echo "Error: Grade cannot be empty!"
+		return 2
+	fi
 
 	# Ensure grade matches allowed values (A–F) and only take one character per entry
+	if ! [[ "$grade_value" =~ $grade_value_format ]]; then
+		echo "Error: Grade can only a single character be A-F!"
+		return 2
+	fi
 	
-	# Must be uppercase
-
-	# Return success or failure
+	# Must be uppercase. Return success or failure
+	echo ${grade_value^^}
+	return 0
 
 }
 
