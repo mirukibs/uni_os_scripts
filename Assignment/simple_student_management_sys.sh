@@ -111,17 +111,32 @@ validate_name() {
 
 validate_record_array() {
 
-	# Check array length equals 4
+	local student_record_array=("$@")
+	local student_record_array_length=${#student_record_array[@]}
 	
-	# Trip whitespace
+	# Check array length equals 4
+	if [[ $student_record_array_length -ne 4 ]]; then
+		echo "Error: A student record must have 4 fields!"
+		return 1
+	fi
 
-	# Loop through each item
-
-	# If any item is empty:
-
-	# Return failure
+	# Validate each item, return failure if validation fails
+	local validated_regno
+	local validated_firstname
+	local validated_lastname
+	local validated_grade
+	
+	validated_regno=$(validate_registration_number "${student_record_array[0]}") || return 1
+	
+	validated_firstname=$(validate_name "${student_record_array[1]}") || return 1
+	
+	validated_lastname=$(validate_name "${student_record_array[2]}") || return 1
+	
+	validated_grade=$(validate_grade "${student_record_array[3]}") || return 1
 
 	# Return success
+	echo "${validated_regno}|${validated_firstname}|${validated_lastname}|${validated_grade}"
+	return 0
 
 }
 
