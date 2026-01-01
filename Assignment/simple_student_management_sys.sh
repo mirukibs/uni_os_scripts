@@ -168,11 +168,13 @@ check_record_exists() {
 # Features
 add_record() {
 	
+	# Accept user input for the record fields
 	read -p "Registration Number: " registration_no
 	read -p "First Name: " firstname
 	read -p "Last Name: " lastname
 	read -p "Grade: " grade
 	
+	# validate the reg number and check for duplicate in file
 	validate_registration_number "$registration_no"
 	registration_no=$(validate_registration_number "$registration_no")
 	if [[ $? -ne 0 ]]; then
@@ -184,13 +186,14 @@ add_record() {
 		return 1
 	fi
 
+	# Validate the array for a comlete record
 	validate_record_array "$registration_no" "$firstname" "$lastname" "$grade"
 	student_record=$(validate_record_array "$registration_no" "$firstname" "$lastname" "$grade")
 	if [[ $? -ne 0 ]]; then
 		return 1
 	fi
 
-	echo "$student_record" >> "$RECORDS_FILE"
+	echo "$student_record" >> "$RECORDS_FILE" # Write to file
 
 	echo "Record added successfully."
 
@@ -199,6 +202,7 @@ add_record() {
 
 delete_record() {
 
+	# Accept user input of reg number then validate it
 	read -p "Registration Number to delete: " registration_no
 	registration_no=$(validate_registration_number "$registration_no")
 	
@@ -211,8 +215,9 @@ delete_record() {
 		return
 	fi
 
+	# Search for the reg number, select everything except the record with the reg number then create a temp copy of the records file for safety incase of wrong deletion
 	grep -v "^${registration_no}|" "$RECORDS_FILE" > "${RECORDS_FILE}.tmp"
-	mv "${RECORDS_FILE}.tmp" "$RECORDS_FILE"
+	mv "${RECORDS_FILE}.tmp" "$RECORDS_FILE" # Replace the original file with the temp which now doesnt have the selected record
 
 	echo "Record deleted successfully."
 
@@ -228,14 +233,16 @@ view_record() {
 		return 1
 	fi
 	
+	# Search for the entered reg number
 	student_record=$(grep "^${registration_no}|" "$RECORDS_FILE")
 	[[ -z "$student_record" ]] && { echo "Record not found."; return; }
 
+	# Read the record then print it to screen
 	IFS='|' read -r registration_no firstname lastname grade <<< "$student_record"
-	echo "Registration: $registration_no"
-	echo "First Name  : $firstname"
-	echo "Last Name   : $lastname"
-	echo "Grade       : $grade"
+	echo "Registration No: $registration_no"
+	echo "First Name     : $firstname"
+	echo "Last Name      : $lastname"
+	echo "Grade          : $grade"
 
 }
 
@@ -244,8 +251,10 @@ list_records() {
 
 	local count=0
 	
+	# Check if file in not empty
 	[[ ! -s "$RECORDS_FILE" ]] && { echo "No records found."; return; }
 
+	# Read each record, line by line, then print to screen
 	while IFS='|' read -r registration_no firstname lastname grade; do
 		echo "$registration_no | $firstname $lastname | Grade: $grade"
 		((count++))
@@ -259,6 +268,7 @@ list_records() {
 
 main() {
 	
+	# Create file if doesn't exist
 	if ! [[ -f "$RECORDS_FILE" ]]; then
 		touch "$RECORDS_FILE"
 	fi
@@ -285,4 +295,4 @@ main() {
 
 }
 
-main
+main # Run the main function
