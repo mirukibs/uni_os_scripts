@@ -2,7 +2,9 @@
 
 # This bash script is a program that simulates a simple student record's management system. A user can add, delete and list the student records in a text file.
 
-set -e
+# set -e
+
+RECORDS_FILE="student_records.txt"
 
 # Validations
 validate_registration_number() {
@@ -12,7 +14,7 @@ validate_registration_number() {
 	local reg_no_length=${#trimmed_reg_no_value}
 	local min_length=15
 	local max_length=16
-	local reg_no_format="^IMC\/[A-Z]{3,4}\/[0-9]{7}$"]
+	local reg_no_format="^[Ii][Mm][Cc]\/[A-Za-z]{3,4}\/[0-9]{7}$"
 	
 	# Check value is not empty	
 	if [[ -z "$trimmed_reg_no_value" ]]; then
@@ -77,7 +79,7 @@ validate_name() {
 	local name_length=${#trimmed_name_value}
 	local name_min_length=3
 	local name_max_length=15
-	local name_format="^[A-Za-z]{3,15}$"
+	local name_value_format="^[A-Za-z]{3,15}$"
 	
 	# Check value is not empty
 	if [[ -z "$trimmed_name_value" ]]; then
@@ -143,10 +145,9 @@ validate_record_array() {
 check_record_exists() {
 
 	local reg_no_value="$1"
-	local student_records_file="student_records.txt"
 	
 	# If file does not exist or is empty, record cannot exist
-	if ! [[ -f "$student_records_file" || ! -s "$student_records_file" ]]; then
+	if [[ ! -f "$RECORDS_FILE" || ! -s "$RECORDS_FILE" ]]; then
 		return 1
 	fi
 	
@@ -155,7 +156,7 @@ check_record_exists() {
 			# Return true
 		# Else:
 			# Return false	
-	if ! grep -q "^${reg_no_value}|" "$student_records_file"; then
+	if ! grep -q "^${reg_no_value}|" "$RECORDS_FILE"; then
 		return 1
 	fi
 	
@@ -166,126 +167,122 @@ check_record_exists() {
 
 # Features
 add_record() {
+	
+	read -p "Registration Number: " registration_no
+	read -p "First Name: " firstname
+	read -p "Last Name: " lastname
+	read -p "Grade: " grade
+	
+	validate_registration_number "$registration_no"
+	registration_no=$(validate_registration_number "$registration_no")
+	if [[ $? -ne 0 ]]; then
+		return 1
+	fi
+	
+	if check_record_exists "$registration_no"; then
+		echo "Error: Record already exists!"
+		return 1
+	fi
 
-	# Declare empty record array
+	validate_record_array "$registration_no" "$firstname" "$lastname" "$grade"
+	student_record=$(validate_record_array "$registration_no" "$firstname" "$lastname" "$grade")
+	if [[ $? -ne 0 ]]; then
+		return 1
+	fi
 
-	# Prompt user for registration number
+	echo "$student_record" >> "$RECORDS_FILE"
 
-	# Validate registration number format
-		# If invalid -> show error -> return
-
-	# Check if registration number already exists
-		# If exists -> show error -> return
-
-	# Prompt user for first name
-
-	# Validate first name
-		# If invalid -> show error -> return
-
-	# Prompt user for last name
-
-	# Validate last name
-		# If invalid -> show error -> return
-
-	# Prompt user for grade
-
-	# Validate grade
-		# If invalid -> show error -> return
-
-	# Populate record array with validated inputs
-
-	# Validate entire record array
-		# Ensure no empty fields
-
-	# Convert record array into delimited string. Store record as: REG_NO|FirstName|LastName|GRADE
-
-	# Append record string to file
-
-	# Display success message
+	echo "Record added successfully."
 
 }
 
 
 delete_record() {
 
-	# Prompt user for registration number
+	read -p "Registration Number to delete: " registration_no
+	registration_no=$(validate_registration_number "$registration_no")
+	
+	if [[ $? -ne 0 ]]; then
+		return 1
+	fi
 
-	# Validate registration number format
-		# If invalid then return
+	if ! check_record_exists "$registration_no"; then
+		echo "Error: Record not found!"
+		return
+	fi
 
-	# Check if record exists
-		# If not then show error -> return
+	grep -v "^${registration_no}|" "$RECORDS_FILE" > "${RECORDS_FILE}.tmp"
+	mv "${RECORDS_FILE}.tmp" "$RECORDS_FILE"
 
-	# Create a temporary file
-
-	# Read records file line by line
-
-	# For each line:
-		# Extract registration number
-		# If it does NOT match target:
-			# Write line to temp file
-
-	# Replace original file with temp file
-
-	# Display confirmation message
+	echo "Record deleted successfully."
 
 }
 
 
 view_record() {
 
-	# Prompt user for registration number
+	read -p "Registration Number to view: " registration_no
+	registration_no=$(validate_registration_number "$registration_no")
 	
-	# Validate registration number
-		# If invalid -> return
+	if [[ $? -ne 0 ]]; then
+		return 1
+	fi
+	
+	student_record=$(grep "^${registration_no}|" "$RECORDS_FILE")
+	[[ -z "$student_record" ]] && { echo "Record not found."; return; }
 
-	# Search records file for matching registration number
-		# If found:
-	 		# Extract full record line
-			# Parse fields into array
-			# Print formatted output	
-		# If not found:
-			# Display "record not found"
+	IFS='|' read -r registration_no firstname lastname grade <<< "$student_record"
+	echo "Registration: $registration_no"
+	echo "First Name  : $firstname"
+	echo "Last Name   : $lastname"
+	echo "Grade       : $grade"
 
 }
 
 
 list_records() {
 
-	# Check if records file is empty
-		# If empty -> show message -> return
-		
-	# Read file line by line
+	local count=0
 	
-	# For each line:
-		# Parse record into array
-		# Print record in readable format
-		
-	# Display total count
+	[[ ! -s "$RECORDS_FILE" ]] && { echo "No records found."; return; }
+
+	while IFS='|' read -r registration_no firstname lastname grade; do
+		echo "$registration_no | $firstname $lastname | Grade: $grade"
+		((count++))
+	done < "$RECORDS_FILE"
+
+	echo "Total records: $count"
+
 
 }
 
 
 main() {
 	
-	# Define path to records file
-	
-	# If file does not exist:
-		# Create empty file
-	
-	# Loop forever:
-		# Display menu:
-			# Add record
-			# Delete record
-			# View record
-			# List all records
-			# Exit
-		
-		# Read user input
-		# Based on choice:
-			# Call corresponding function
-		# Handle invalid menu choice
+	if ! [[ -f "$RECORDS_FILE" ]]; then
+		touch "$RECORDS_FILE"
+	fi
 
-	# Exit loop only on explicit exit choice
+	while true; do
+		echo
+		echo "1. Add Record"
+		echo "2. Delete Record"
+		echo "3. View Record"
+		echo "4. List Records"
+		echo "5. Exit"
+		
+		read -p "Choice: " choice
+
+		case "$choice" in
+			1) add_record ;;
+			2) delete_record ;;
+			3) view_record ;;
+			4) list_records ;;
+			5) echo "Goodbye."; exit 0 ;;
+			*) echo "Invalid choice." ;;
+		esac
+	done
 
 }
+
+main
