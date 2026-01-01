@@ -113,6 +113,10 @@ validate_record_array() {
 
 	local student_record_array=("$@")
 	local student_record_array_length=${#student_record_array[@]}
+	local validated_regno
+	local validated_firstname
+	local validated_lastname
+	local validated_grade
 	
 	# Check array length equals 4
 	if [[ $student_record_array_length -ne 4 ]]; then
@@ -120,12 +124,7 @@ validate_record_array() {
 		return 1
 	fi
 
-	# Validate each item, return failure if validation fails
-	local validated_regno
-	local validated_firstname
-	local validated_lastname
-	local validated_grade
-	
+	# Validate each item, return failure if validation fails	
 	validated_regno=$(validate_registration_number "${student_record_array[0]}") || return 1
 	
 	validated_firstname=$(validate_name "${student_record_array[1]}") || return 1
@@ -143,12 +142,25 @@ validate_record_array() {
 
 check_record_exists() {
 
-	# Search file for line starting with reg_no|
+	local reg_no_value="$1"
+	local student_records_file="student_records.txt"
+	
+	# If file does not exist or is empty, record cannot exist
+	if ! [[ -f "$student_records_file" || ! -s "$student_records_file" ]]; then
+		return 1
+	fi
+	
+	# Search for record starting with REG_NO|
 		# If found:
 			# Return true
 		# Else:
-			# Return false
-
+			# Return false	
+	if ! grep -q "^${reg_no_value}|" "$student_records_file"; then
+		return 1
+	fi
+	
+	return 0
+		
 }
 
 
