@@ -7,14 +7,15 @@ set -e
 # Validations
 validate_registration_number() {
 
-	# Check value is not empty
 	local reg_no_value=$1
-	local reg_no_length=${#reg_no_value}
+	local trimmed_reg_no_value=$(echo "$reg_no_value" | tr -d '[:space:]')
+	local reg_no_length=${#trimmed_reg_no_value}
 	local min_length=15
 	local max_length=16
-	local reg_no_format="^IMC\/[A-Z]{3,4}\/[0-9]{7}$"
+	local reg_no_format="^IMC\/[A-Z]{3,4}\/[0-9]{7}$"]
 	
-	if [[ -z "$reg_no_value" ]]; then
+	# Check value is not empty	
+	if [[ -z "$trimmed_reg_no_value" ]]; then
 		echo "Error: Registration number cannot be empty!"
 		return 1
 	fi
@@ -25,19 +26,19 @@ validate_registration_number() {
 		return 1
 	fi
 	
-	if [[ $((reg_no_length)) -gt $max_length ]]; then
+	if [[ $reg_no_length -gt $max_length ]]; then
 		echo "Error: Registration number cannot be greater than $max_length!"
 		return 1
 	fi	
 
 	# Check format IMC/XXXX/NNNNNNN where XXXX is faculty code and NNNNNNN is numeric. Note faculty code be 3 chars instead of 4
-	if ! [[ "$reg_no_value" =~ $reg_no_format ]]; then
+	if ! [[ "$trimmed_reg_no_value" =~ $reg_no_format ]]; then
 		echo "Error: Incorrect format. Registration number format is IMC/XXXX/NNNNNNN!"
 		return 1
 	fi
 	
 	# Accept input in any case, but store in uppercase in the file. Return success or failure
-	echo "${reg_no_value^^}"
+	echo "${trimmed_reg_no_value^^}"
 	return 0
 
 }
@@ -46,23 +47,24 @@ validate_registration_number() {
 validate_grade() {
 
 	local grade_value=$1
+	local trimmed_grade_value=$(echo "$grade_value" | tr -d '[:space:]')
 	local grade_value_format="^[A-Fa-f]{1}$"
-	local grade_value_length=${#grade_value}
+	local grade_value_length=${#trimmed_grade_value}
 
 	# Check value is not empty
 	if [[ $grade_value_length -lt 1 ]]; then
 		echo "Error: Grade cannot be empty!"
-		return 2
+		return 1
 	fi
 
 	# Ensure grade matches allowed values (A–F) and only take one character per entry
-	if ! [[ "$grade_value" =~ $grade_value_format ]]; then
+	if ! [[ "$trimmed_grade_value" =~ $grade_value_format ]]; then
 		echo "Error: Grade can only a single character be A-F!"
-		return 2
+		return 1
 	fi
 	
 	# Must be uppercase. Return success or failure
-	echo ${grade_value^^}
+	echo ${trimmed_grade_value^^}
 	return 0
 
 }
@@ -70,15 +72,39 @@ validate_grade() {
 
 validate_name() {
 
+	local name_value=$1
+	local trimmed_name_value=$(echo "$name_value" | tr -d '[:space:]')
+	local name_length=${#trimmed_name_value}
+	local name_min_length=3
+	local name_max_length=15
+	local name_format="^[A-Za-z]{3,15}$"
+	
 	# Check value is not empty
-
-	# Ensure contains only alphabetic characters and no special characters
+	if [[ -z "$trimmed_name_value" ]]; then
+		echo "Error: Name cannot be empty!"
+		return 1
+	fi
 
 	# Ensure min length is 3 and max is 15 characters
+	if [[ $name_length -lt $name_min_length ]]; then
+		echo "Error: Name cannot be less than $name_min_length!"
+		return 1
+	fi
 	
-	# Trip whitespace
-
-	# Return success or failure
+	if [[ $name_length -gt $name_max_length ]]; then
+		echo "Error: Name cannot be greater than $name_max_length!"
+		return 1
+	fi
+	
+	# Ensure contains only alphabetic characters and no special characters
+	if ! [[ "$trimmed_name_value" =~ $name_value_format ]]; then
+		echo "Error: Name can only be alphabetic characters!"
+		return 1
+	fi
+	
+	# Must be uppercase. Return success or failure
+	echo ${trimmed_name_value^^}
+	return 0
 
 }
 
